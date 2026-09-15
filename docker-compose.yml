@@ -1,0 +1,21 @@
+services:
+  floci:
+    image: floci/floci:latest
+    ports:
+      - "4566:4566"
+
+    environment:
+      - AWS_ENDPOINT_URL=http://localhost:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+  
+  video-metadata-db:
+    image: mongodb/mongodb-community-server:8.0-ubi8-slim
+    ports:
+      - "27017:27017"
+    volumes:
+      - db-data:/data/db
+  
+volumes:
+  db-data:
