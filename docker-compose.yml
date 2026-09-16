@@ -1,9 +1,26 @@
 services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb-data:/pb-data
+    environment:
+      - TZ=UTC
+      - PB_ADMIN_EMAIL=mrivera1991@gmail.com
+      - PB_ADMIN_PASSWORD=12345678
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
   floci:
     image: floci/floci:latest
     ports:
       - "4566:4566"
-
     environment:
       - AWS_ENDPOINT_URL=http://localhost:4566
       - AWS_DEFAULT_REGION=us-east-1
@@ -19,3 +36,4 @@ services:
   
 volumes:
   db-data:
+  pb-data:
