@@ -23,6 +23,9 @@ type VideoMetadata struct {
 	OwnerId uuid.UUID;
 	Description string;
 	Thumbnail string;
+	FileType string; // MP4
+	Chunks uint;
+	Status string; // Pending, Uploading, Error, Complete, Cancelled
 }
 
 func InitializeMongoClient() (*mongo.Client, error) {
