@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -76,10 +77,21 @@ func SetupMongoDB(client *mongo.Client) error {
 	return nil
 }
 
-func InsertIntoMemoryStore(memoryStore []VideoMetadata, item VideoMetadata) {
-	memoryStore[0] = item
+func InsertVideoMetadata(client *mongo.Client, item VideoMetadata) (*mongo.InsertOneResult, error) {
+	videoCollection := client.Database("video-metadata-db").Collection("videos")
+	
+	
+	result, err := videoCollection.InsertOne(context.TODO(), item)
+	if err != nil {
+		log.Printf("There was an issue while inserting into the collection: %s", err)
+		return nil, err
+	}
+
+
+	log.Print("Inserted document with this id: ", result.InsertedID)
+	return result, nil
 }
 
-func UpdateMemoryStoreItem(memoryStore []VideoMetadata, key string) {}
+func UpdateVideoMetadata(client *mongo.Client, id bson.ObjectID) {} // TODO: What is the update parameter look like?
 
-func DeleteMemoryStoreItem(memoryStore []VideoMetadata, index int) {}
+func DeleteVideoMetadata(client *mongo.Client, id bson.ObjectID) {}
