@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -81,14 +82,39 @@ func editProfileHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Edit Profile")
 }
 
+type UploadRequestBody struct {
+	Title string 			`json:"title"`
+	Description string 		`json:"description"`
+	FileType string 		`json:"fileType"`
+	TotalChunks int 		`json:"totalChunks"`
+}
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	
+	// TODO REQUEST VALIDATION: 
+	// Ownership, ensure videos are uploaded by users logged in
+
+	var requestBody UploadRequestBody;
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&requestBody); err != nil {
+		// Logging?
+		fmt.Println(err)
+		http.Error(w, "There was an issue processing your request. Please try again later", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: REQUEST VALIDATION
+	// What will come from the user?
+	// Title, Desc
+
 	currentTime := time.Now().UTC()
 
-	// What will come from the user?
-	// Title, Desc and technically OwnerId
+
+
 
 	// What will come from other systems?
-	// VideoId, ManifestId, Thumbnail
+	// ManifestId, Thumbnail
 
 	// View Count always defaults to 0
 
@@ -97,6 +123,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		Last_Updated: currentTime,
 		Create_Date: currentTime,
 		Published_At: currentTime,
+		Status: "pending",
+		View_Count: 0,
+		
+
+		Title: requestBody.Title,
+		Description: requestBody.Description,
+		Chunks: uint(requestBody.TotalChunks),
+		FileType: requestBody.FileType,
+
+
+		VideoId: uuid.New(),
+		ManifestId: uuid.New(),
 	}
 }
 
