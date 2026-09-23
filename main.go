@@ -2,33 +2,32 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
+	"os"
 
 	"github.com/MarkRivera/ada/internal/auth"
 	"github.com/MarkRivera/ada/internal/config"
-	ada "github.com/MarkRivera/ada/internal/mongo"
 	"github.com/MarkRivera/ada/internal/uploads"
+
+	ada "github.com/MarkRivera/ada/internal/mongo"
+	"github.com/MarkRivera/ada/internal/server"
 )
  
 
 
 func main() {
-	config := config.InitConfig()
+	app := config.InitApplication()
 
+	app.Logger.Info("Application Starting")
 	
-	mongoClient, err := ada.InitializeMongoClient(config.MongoUrl);
+	err := ada.InitializeMongoClient(app);
 	if err != nil {
-		log.Fatalf("Could not connect client to Mongo Cluster: %s", err)
+		app.Logger.Error("Failed to connect client to Mongo Cluster")
+		app.Logger.Error(err.Error())
+		os.Exit(1)
 	}
-	defer mongoClient.Disconnect(context.Background())
+	defer app.Db.Disconnect(context.Background())
 
-	// err = ada.SetupMongoDB(mongoClient)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// env := &config.Env{ Db: mongoClient }
 
 	// Set up HTTP Handlers
 	// This server is evolving to handle initial upload requests and user registration
@@ -38,12 +37,24 @@ func main() {
 
 	mux := http.NewServeMux()
 	
-	// server.RegisterRoutes(env, mux)
-	auth.RegisterRoutes(mux)
-	uploads.RegisterRoutes(mux)
+	mux.HandleFunc("GET /{$}", server.HealthCheckHandler(app))
 
-	log.Printf("Connecting to %s \n", config.Port)
-	log.Fatal(http.ListenAndServe(config.Port, mux))
+	mux.HandleFunc("POST /register", auth.RegisterHandler(app))
+	mux.HandleFunc("POST /login", auth.LoginHandler(app))
+	mux.HandleFunc("GET /logout", auth.LogoutHandler(app))
+	mux.HandleFunc("GET /profile/{id}", auth.ViewProfileHandler(app))
+	mux.HandleFunc("PATCH /profile/{id}/edit", auth.EditProfileHandler(app))
+
+
+	mux.HandleFunc("POST /upload", uploads.UploadHandler(app))
+	mux.HandleFunc("GET /upload/status", uploads.StatusHandler(app))
+
+	
+
+	app.Logger.Info("Listening for requests", "port", app.Port)
+	err = http.ListenAndServe(app.Port, mux)
+	app.Logger.Error(err.Error())
+	os.Exit(1)
 }
 
 

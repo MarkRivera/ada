@@ -3,35 +3,40 @@ package auth
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/MarkRivera/ada/internal/config"
 )
 
-func RegisterRoutes(server *http.ServeMux) {
-	// Guests should be able to view register and login pages
-	http.HandleFunc("POST /register", registerHandler)
-	http.HandleFunc("POST /login", loginHandler)
+// Guests should be able to view register and login pages
+// Users need to be able to logout, view profile, update profile
 
-	// Users need to be able to logout, view profile, update profile
-	http.HandleFunc("GET /logout", logoutHandler)
-	http.HandleFunc("GET /profile/{id}", viewProfileHandler)
-	http.HandleFunc("PATCH /profile/{id}/edit", editProfileHandler)
+func RegisterHandler(app *config.Application) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Register User")
+	}
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Register User")
+
+func LoginHandler(app *config.Application) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Login User")
+	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Login User")
+func LogoutHandler(app *config.Application) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Logout User")
+	}
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Logout User")
+func ViewProfileHandler(app *config.Application) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "View Profile")
+	}
 }
 
-func viewProfileHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "View Profile")
-}
-
-func editProfileHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Edit Profile")
+func EditProfileHandler(apap *config.Application) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Edit Profile")
+	}	
 }

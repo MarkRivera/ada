@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"encoding/json"
@@ -13,14 +13,13 @@ type HealthResponse struct {
 	Mongo string `json: "mongo"`
 }
 
-func RegisterRoutes(env *config.Env, mux *http.ServeMux) {
-	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+func HealthCheckHandler(app *config.Application) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		response := HealthResponse{}
 		response.Success = true
 		response.Mongo = "Up"
 
-		err := env.Db.Ping(r.Context(), nil)
-		
+		err := app.Db.Ping(r.Context(), nil)
 		if err != nil {
 			log.Printf("There was an issue while trying to reach the database: %s", err)
 			response.Mongo = "Down"
@@ -34,5 +33,5 @@ func RegisterRoutes(env *config.Env, mux *http.ServeMux) {
 			log.Printf("Error while responding to health check request: %s", err)
 			return
 		}
-	})
+	}
 }

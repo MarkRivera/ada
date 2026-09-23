@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/MarkRivera/ada/internal/config"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -33,15 +34,18 @@ type VideoRepository struct {
 	collection *mongo.Collection
 }
 
-func InitializeMongoClient(uri string) (*mongo.Client, error) {
-	clientOptions := options.Client().ApplyURI(uri)
-	mongoClient, err := mongo.Connect(clientOptions)
+func InitializeMongoClient(app *config.Application) error {
+	clientOptions := options.Client().ApplyURI(app.MongoUrl)
 
+	app.Logger.Info("Attempting Mongo DB Connection")
+	mongoClient, err := mongo.Connect(clientOptions)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	app.Logger.Info("Mongo DB Connection Successful!")
+	app.Db = mongoClient
 	
-	return mongoClient, nil;
+	return nil;
 }
 
 func NewMongoRepository(client *mongo.Client) *VideoRepository {
