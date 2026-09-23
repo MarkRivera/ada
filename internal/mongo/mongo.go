@@ -3,7 +3,6 @@ package ada
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,12 +28,12 @@ type VideoMetadata struct {
 	Status string; // Pending, Uploading, Error, Complete, Cancelled
 }
 
-func InitializeMongoClient() (*mongo.Client, error) {
-	uri, ok := os.LookupEnv("MONGO_URI")
-	if !ok {
-		uri = "mongodb://localhost:27017"
-	}
 
+type VideoRepository struct {
+	collection *mongo.Collection
+}
+
+func InitializeMongoClient(uri string) (*mongo.Client, error) {
 	clientOptions := options.Client().ApplyURI(uri)
 	mongoClient, err := mongo.Connect(clientOptions)
 
@@ -43,6 +42,12 @@ func InitializeMongoClient() (*mongo.Client, error) {
 	}
 	
 	return mongoClient, nil;
+}
+
+func NewMongoRepository(client *mongo.Client) *VideoRepository {
+	return &VideoRepository{
+		collection: client.Database("video-metadata-db").Collection("videos"),
+	}
 }
 
 func SetupMongoDB(client *mongo.Client) error {
@@ -77,11 +82,8 @@ func SetupMongoDB(client *mongo.Client) error {
 	return nil
 }
 
-func InsertVideoMetadata(client *mongo.Client, item VideoMetadata) (*mongo.InsertOneResult, error) {
-	videoCollection := client.Database("video-metadata-db").Collection("videos")
-	
-	
-	result, err := videoCollection.InsertOne(context.TODO(), item)
+func (repo *VideoRepository) InsertVideoMetadata(ctx context.Context, item VideoMetadata) (*mongo.InsertOneResult, error) {
+	result, err := repo.collection.InsertOne(ctx, item)
 	if err != nil {
 		log.Printf("There was an issue while inserting into the collection: %s", err)
 		return nil, err
