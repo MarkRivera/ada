@@ -27,8 +27,7 @@ func UploadHandler(app *config.Application) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		if err := decoder.Decode(&requestBody); err != nil {
 			// Logging?
-			fmt.Println(err)
-			http.Error(w, "There was an issue processing your request. Please try again later", http.StatusInternalServerError)
+			app.ServerError(w, r, err)
 			return
 		}
 
@@ -36,17 +35,17 @@ func UploadHandler(app *config.Application) http.HandlerFunc {
 		// What will come from the user?
 		// Title, Desc, FileType and TotalChunks
 		if len(requestBody.Title) > MAX_TITLE_SIZE {
-			http.Error(w, "Title is too long", http.StatusBadRequest)
+			app.ClientError(w, http.StatusBadRequest, "Title is too long")
 			return
 		}
 
-		if len(requestBody.Description) ==  MAX_DESCRIPTION_SIZE {
-			http.Error(w, "Description is too long", http.StatusBadRequest)
+		if len(requestBody.Description) == MAX_DESCRIPTION_SIZE {
+			app.ClientError(w, http.StatusBadRequest, "Description is too long")
 			return
 		}
 
 		if requestBody.FileType != "video/mp4" {
-			http.Error(w, "We currently only support MP4 Videos", http.StatusBadRequest)
+			app.ClientError(w, http.StatusBadRequest, "We currently only support MP4 Videos")
 			return
 		}
 
@@ -81,6 +80,7 @@ func UploadHandler(app *config.Application) http.HandlerFunc {
 		}
 
 		// mongo.InsertVideoMetadata(r.Context(), metadata)
+		w.Write([]byte("Created!\n"))
 	}
 }
 

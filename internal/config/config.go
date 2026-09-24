@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"log/slog"
+	"net/http"
 	"os"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -49,4 +51,36 @@ func InitApplication() (*Application) {
 	}
 
 	return &conf
+}
+
+func (app *Application) ServerError(w http.ResponseWriter, r *http.Request, err error) {
+	var (
+		method 	= r.Method
+		uri 	= r.URL.RequestURI()
+	)
+
+	app.Logger.Error(err.Error(), "method", method, "uri", uri)
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+type ClientResponse struct {
+	Ok      bool    `json:"ok"`
+	Status  int     `json:"status"`
+	Message string  `json:"msg"`
+}
+// The clientError helper sends a specific status code and corresponding description to the user
+func (app *Application) ClientError(w http.ResponseWriter, status int, message string) {
+	response := ClientResponse{
+		Ok: false,
+		Status: status,
+		Message: message,
+	}
+
+	jsonRes, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+    http.Error(w, string(jsonRes), status)
 }

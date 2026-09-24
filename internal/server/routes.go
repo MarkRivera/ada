@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/MarkRivera/ada/internal/config"
@@ -10,19 +9,19 @@ import (
 
 type HealthResponse struct {
 	Success bool `json:"success"`
-	Mongo string `json: "mongo"`
+	MongoDB string `json:"mongoStatus"`
 }
 
 func HealthCheckHandler(app *config.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := HealthResponse{}
 		response.Success = true
-		response.Mongo = "Up"
+		response.MongoDB = "Up"
 
 		err := app.Db.Ping(r.Context(), nil)
 		if err != nil {
-			log.Printf("There was an issue while trying to reach the database: %s", err)
-			response.Mongo = "Down"
+			app.Logger.Error("There was an issue while trying to reach the database: " + err.Error())
+			response.MongoDB = "Down"
 			response.Success = false
 		}
 
@@ -30,8 +29,7 @@ func HealthCheckHandler(app *config.Application) http.HandlerFunc {
 		
 		err = json.NewEncoder(w).Encode(response)
 		if err != nil {
-			log.Printf("Error while responding to health check request: %s", err)
-			return
+			app.ServerError(w, r, err)
 		}
 	}
 }
